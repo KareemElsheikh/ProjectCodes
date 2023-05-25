@@ -1,4 +1,4 @@
-## Encoder of Lempel-Ziv technique
+## Encoder of Lempel-Ziv technique(Matlab)
  clc
 clear
 string='Im the masters nightmarish, gorgonian hatemonger, his moth-eaten gonorrhoea, smothering mightiest heroism, thrashing ego-manias (or, to me, ignorant mismanagements) strong-arm mishmash or staggering high treason';
