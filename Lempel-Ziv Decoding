@@ -1,0 +1,71 @@
+## Lempel-Ziv Decoding(Matlab)
+clc
+clear
+AlphabetString = ' (),-aeghimnorst';
+NumberMultipliedBy_X = 2^ceil(log2(length(AlphabetString)));
+%%% Decoder 
+ InputBinarySeq = '100101010000000001111000100000001100111010000010100001110010001100000110110010000000010110001011101011111001001010101110010100110000000000110001101110000011000101101111010110110000101010110100000010101010101010101011101110011011011001100000010110010110010100101011111000101010000011001010010101011010100110000110111000010111101000101110010001100110000111110000010110000010010000111011001001101011100011110010000000111001111100100011011100001000000000101011000101111000000011110000010001100001111110001011101001000111001111110111100000000000110011101010101000100001011011000111000000110001001010111010011110111100101010000000001001100011110100101100001011100001001010001101111101011111110011111101010110000011010001011011000010011100000000001001010101111011010110110110000010000010001101000001000000000010100100100101010011101010000000011110000010110000000100111110001000011110011001101000000110110111100100000011101000011100011010100011111000101011011';
+% %% calculating Max(number*x+y) which is independent of sequence
+ NumberofBitsReq = ceil(log2(length(AlphabetString)));
+ for i=1:1:length(InputBinarySeq)
+     if(length(AlphabetString)>2)
+        Max2XPlusY(i) = NumberMultipliedBy_X*(i-1) + length(AlphabetString);
+     else
+         Max2XPlusY(i) = NumberMultipliedBy_X*(i-1) + NumberofBitsReq;
+     end
+end
+%% calculatin no. of bits
+for i=1:1:length(InputBinarySeq)
+    if((Max2XPlusY(i)==1) && (length(AlphabetString)==2))
+        No_Bits(i) = 1;
+    else if(Max2XPlusY(i)==2)
+            No_Bits(i) = ceil(log2(Max2XPlusY(i)))+1;
+    else
+    No_Bits(i) = ceil(log2(Max2XPlusY(i)));
+    end
+    end
+end
+%%Extract binary codeword according to the number of bits in No_Bits
+index3 = 1;
+index4 = 1;
+%ExtractedBinarySeq = strings(1,numel(No_Bits));
+while index3 <= length(InputBinarySeq)
+    ExtractedBinarySeq(index4) = convertCharsToStrings(cell2mat(extractBetween(InputBinarySeq,index3,index3-1+No_Bits(index4))));
+    index3 = index3 + No_Bits(index4);
+    index4 = index4 + 1;
+end
+
+
+ decodedPairs = zeros(length(ExtractedBinarySeq),2); %%pairs for the decoded sequence
+
+
+for i=1:1:length(ExtractedBinarySeq)
+        x = ExtractedBinarySeq(i);
+        if(No_Bits(i)< NumberofBitsReq)
+            index5 = 0;
+        else
+            index5 =No_Bits(i)-NumberofBitsReq;
+        end
+        if(index5 == 0)
+            decodedPairs(1,1) = "0";
+            decodedPairs(1,2) = bin2dec(convertCharsToStrings(x));
+            
+            continue
+        else
+        s1 = x{1}(1:index5);
+        s2 = x{1}(index5+1:end);
+        decodedPairs(i,1) = bin2dec(convertCharsToStrings(s1));
+        decodedPairs(i,2) = bin2dec(convertCharsToStrings(s2));
+        end
+end
+decodedSeq = strings(1,length(ExtractedBinarySeq));
+
+for i=1:1:length(decodedSeq)
+    if(decodedPairs(i,1)==0)
+            decodedSeq(i) = AlphabetString(decodedPairs(i,2)+1);
+    else
+            decodedSeq(i) = decodedSeq(decodedPairs(i,1))+AlphabetString(decodedPairs(i,2)+1);
+     end
+end
+StringOfDecodedSeq = strjoin(decodedSeq);
+StringOfDecodedSeq = strrep(StringOfDecodedSeq,' ','');
