@@ -1,0 +1,80 @@
+## Encoder of Lempel-Ziv technique
+ clc
+clear
+string='Im the masters nightmarish, gorgonian hatemonger, his moth-eaten gonorrhoea, smothering mightiest heroism, thrashing ego-manias (or, to me, ignorant mismanagements) strong-arm mishmash or staggering high treason';
+string = lower(string);
+AlphabetString = unique(string);
+seqbook = [];
+index1=1;
+
+%% divide string into the shortest string that has not been appeared before %%
+while index1<=length(string)
+    index2 = index1;
+    seq = cell2mat(extractBetween(string,index1,index2));
+    while ismember(seq,seqbook)
+        if(index2 == length(string))
+            break;
+        end
+        index2 = index2+1;
+        seq = cell2mat(extractBetween(string,index1,index2));
+    end
+    seqbook = [seqbook , convertCharsToStrings(seq)];
+    index1 = index2+1;
+end
+%%%%%
+%% generate encoded pairs (position of string, symbol)%%%%
+encodedpairs = zeros(length(seqbook),2);
+position_encoded = zeros(length(seqbook));
+symbol_encoded = zeros(length(seqbook));
+
+for i=1:1:length(seqbook)
+    z = char(seqbook(i));
+    symbol_encoded(i) = z(end);
+    if (length(z) ==1)
+        symbol = 0;
+        position_encoded(i) =0;
+    else
+    symbol = convertCharsToStrings(z(1:end-1));
+    position = find(seqbook==symbol);
+    position_encoded(i) = position(1);
+    end
+
+    symbol_encoded(i) = strfind(AlphabetString,symbol_encoded(i));
+    encodedpairs(i,1) = position_encoded(i); %% position of string
+    encodedpairs(i,2) = symbol_encoded(i)-1;  %% position of symbol in Unique alphabet strings
+end
+%%%%%%%%%%%%%%%%%
+
+%% use length function to get number of elements directly in an array instead of looping
+NumberMultipliedBy_X = 2^ceil(log2(length(AlphabetString))); %% Number Multipied by x ex: 2 if 2 symbols , 4 if 3 symbols , etc.. 
+NoBy_X_Plus_Y = NumberMultipliedBy_X* encodedpairs(:,1) + encodedpairs(:,2);  %% ex: 2x+y or 4x+y, etc..
+
+NumberOfPrefixes = 0:length(seqbook)-1; %% Position of string -1
+NOOfBits = ceil(log2(length(AlphabetString)));
+%% to determine length of bit sequence to represent each string
+Max_NO_By_x_y = NumberOfPrefixes*NumberMultipliedBy_X + NOOfBits; %% Max(2x+y)
+
+%% number of bits to represent (2x+y);
+numberOfBits = ceil(log2(Max_NO_By_x_y));
+for i=1:1:length(numberOfBits)
+    if(Max_NO_By_x_y(i)==2)
+        numberOfBits(i)=2;
+    end
+end
+
+for i=1:1:length(seqbook)
+    x = dec2bin(NoBy_X_Plus_Y(i));
+    BinaryCodedSeq(i) = convertCharsToStrings(pad(x,numberOfBits(i),'left','0'));
+end
+
+%% use function strjoin to conactnate binary codeword in one string
+StringOfBinaryCodedSeq = strjoin(BinaryCodedSeq);
+StringOfBinaryCodedSeq = strrep(StringOfBinaryCodedSeq,' ','');
+%% to calculate compression ratio
+%% 1st find average code length 
+lengthOfStringBinaryCoded = sum(numberOfBits);
+AverageCodeLength = lengthOfStringBinaryCoded/length(string);
+%% 2nd find fixed code length
+fixedCodeLength = log2(NumberMultipliedBy_X);
+CompressionRatio = AverageCodeLength/fixedCodeLength;
+
